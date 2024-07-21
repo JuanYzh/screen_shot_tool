@@ -5,7 +5,7 @@ a = Analysis(
     ['screen_shot_tool.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('res', 'res'), ('README.md', 'static')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

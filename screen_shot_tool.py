@@ -3,14 +3,17 @@
 # Date: 2023-03.01
 # Ich und google :)
 import io
+import os
+import pystray
+import keyboard
 import tkinter as tk
 from tkinter import ttk
 import win32clipboard as clipboard
-from tkinter import Toplevel, Menu, colorchooser
+from tkinter import Toplevel, Menu
 from PIL import Image, ImageTk, ImageGrab, ImageDraw
 
 
-cversion = "ScreenShot tool - v1.0.0"
+cversion = "ScreenShot tool - v1.0.1"
 
 
 class ScreenShotImage():
@@ -262,22 +265,46 @@ class ScreenShotImage():
 
 class ScreenshotApp:
     def __init__(self, root):
+        self.root_hide = True      
         self.root = root
         self.root.title(cversion)
         self.root.geometry("200x100")
-
+        
         self.screenshot_button = ttk.Button(self.root, text="Screenshot", command=self.start_selection)
         self.screenshot_button.pack(pady=10)
 
-        self.quit_button = ttk.Button(self.root, text="Quit", command=self.root.quit)
+        self.quit_button = ttk.Button(self.root, text="Quit", command=self.on_closing)
         self.quit_button.pack(pady=10)
 
         self.is_drawing = False  # 初始化绘图状态
         self.initial_width = None  # 初始化初始宽度
         self.initial_height = None  # 初始化初始高度
 
+        self.listen_for_hotkeys()
+        
+        self.set_icon()
+        
+        self.root.protocol('WM_DELETE_WINDOW', self.on_closing)
+        
+        self.icon.run_detached()
+        
+        self.root.withdraw()
+
+    def set_icon(self):
+        self.icon = pystray.Icon("my_icon", Image.open("res/Cut.ico"), "最小化到托盘")
+        self.icon.menu = pystray.Menu(
+            pystray.MenuItem("Show", self.on_show), 
+            pystray.MenuItem("Auto Hide", self.auto_hide), 
+            pystray.MenuItem("Quit", self.on_closing))
+        
+    def listen_for_hotkeys(self):
+        keyboard.add_hotkey('ctrl+alt+a', self.start_selection)
+        keyboard.add_hotkey('f1', self.start_selection)
+        
     def start_selection(self):
         self.selection_window = Toplevel(self.root)
+        self.selection_window.deiconify()
+        self.selection_window.attributes('-topmost', True)  # 窗口置顶
         self.selection_window.attributes("-fullscreen", True)
         self.selection_window.attributes("-alpha", 0.3)
         self.selection_window.configure(background='black')
@@ -315,12 +342,34 @@ class ScreenshotApp:
         self.root.withdraw()  # 隐藏主窗口
         self.screenshot_image = ImageGrab.grab(bbox=(x1, y1, x2, y2))
         self.screenshot_image_copy = self.screenshot_image.copy()
-        self.root.deiconify()  # 截图完成后显示主窗口
+        if not self.root_hide:
+            self.root.deiconify()  # 截图完成后显示主窗口
         self.show_screenshot(self.screenshot_image)
 
     def show_screenshot(self, screenshot_image):
         draw_win = ScreenShotImage(self.root, screenshot_image)
         draw_win.show_screenshot()
+        
+    def minimize_to_tray(self):
+        # self.root.withdraw()
+        self.icon.run()
+        self.root_hide = True
+    
+    def on_show(self):
+        # self.icon.stop()
+        self.root.deiconify()
+        self.set_icon()
+        self.root_hide = False
+    
+    def auto_hide(self):
+        self.root.withdraw()
+        self.root_hide = True
+        
+    def on_closing(self):
+        # self.root.destroy()
+        # self.icon.stop()
+        # self.root.quit()
+        os._exit(1)
 
 
 if __name__ == "__main__":
