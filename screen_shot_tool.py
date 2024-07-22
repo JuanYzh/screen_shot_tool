@@ -291,7 +291,7 @@ class ScreenshotApp:
         self.root.withdraw()
 
     def set_icon(self):
-        self.icon = pystray.Icon("my_icon", Image.open("res/Cut.ico"), "最小化到托盘")
+        self.icon = pystray.Icon("my_icon", Image.open("res/Cut.ico"), "ScreenShot")
         self.icon.menu = pystray.Menu(
             pystray.MenuItem("Show", self.on_show), 
             pystray.MenuItem("Auto Hide", self.auto_hide), 
